@@ -1,6 +1,0 @@
-database:
-  user: postgres
-  password: pinny
-  name: postgres
-  host: localhost
-  port: 5432
