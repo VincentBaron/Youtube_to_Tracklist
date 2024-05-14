@@ -8,4 +8,7 @@ type Config struct {
 		Password string `yaml:"password"`
 		Name     string `yaml:"name"`
 	} `yaml:"database"`
+	YoutubeAPIKey       string `yaml:"youtube_api_key"`
+	SpotifyClientID     string `yaml:"spotify_client_id"`
+	SpotifyClientSecret string `yaml:"spotify_client_secret"`
 }

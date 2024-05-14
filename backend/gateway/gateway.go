@@ -8,4 +8,7 @@ func SetupRoutes(r *gin.Engine) {
 
 	// r.GET("/blocks", getBlocks)
 	r.POST("/playlist", createPlaylist)
+	r.GET("/spotify-login", spotifyLoginHandler)
+	r.GET("/home", homeHandler)
+	r.GET("/callback", callbackHandler)
 }

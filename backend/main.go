@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -14,15 +15,15 @@ import (
 	"gorm.io/gorm"
 )
 
-// func LoadConfig(file string) (models.Config, error) {
-// 	var config models.Config
-// 	data, err := ioutil.ReadFile(file)
-// 	if err != nil {
-// 		return config, err
-// 	}
-// 	err = yaml.Unmarshal(data, &config)
-// 	return config, err
-// }
+func LoadConfig(file string) (models.Config, error) {
+	var config models.Config
+	data, err := ioutil.ReadFile(file)
+	if err != nil {
+		return config, err
+	}
+	err = yaml.Unmarshal(data, &config)
+	return config, err
+}
 
 func main() {
 	configsFile, err := os.ReadFile("configs.yml")
@@ -36,7 +37,6 @@ func main() {
 	if err != nil {
 		// handle error
 	}
-	log.Printf("config: %#v", config)
 
 	// Extract the necessary information from the Config struct
 	host := config.Database.Host
@@ -44,6 +44,9 @@ func main() {
 	user := config.Database.User
 	password := config.Database.Password
 	database := config.Database.Name
+	youtubeAPIKey := config.YoutubeAPIKey
+
+	// Connect to postgres
 	dsn := fmt.Sprintf("host=%s port=%s, user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, database)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -58,12 +61,16 @@ func main() {
 	// db.AutoMigrate(models.Models())
 	// db.AutoMigrate(&models.Block{})
 
+	// Set up the Gin router
 	r := gin.Default()
-	dbMiddleware := func(c *gin.Context) {
+	middleware := func(c *gin.Context) {
 		c.Set("db", db)
+		c.Set("youtubeAPIKey", youtubeAPIKey)
+		c.Set("SpotifyClientID", config.SpotifyClientID)
+		c.Set("SpotifyClientSecret", config.SpotifyClientSecret)
 		c.Next()
 	}
-	r.Use(dbMiddleware)
+	r.Use(middleware)
 
 	// Set up the API endpoints
 	gateway.SetupRoutes(r)
