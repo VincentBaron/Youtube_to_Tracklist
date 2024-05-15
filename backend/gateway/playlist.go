@@ -6,8 +6,10 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/VincentBaron/youtube_to_tracklist/backend/models"
 	"github.com/zmb3/spotify"
 	"golang.org/x/oauth2"
+	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,6 +23,11 @@ type TracklistResponse struct {
 
 type SpotifyAuthResponse struct {
 	AccessToken string `json:"access_token"`
+}
+
+type CreatePlaylistReq struct {
+	URL         string `json:"url" binding:"required"`
+	AccessToken string `json:"accessToken" binding:"required"`
 }
 
 type ExternalUrls struct {
@@ -42,7 +49,15 @@ type SpotifySearchResponse struct {
 }
 
 func createPlaylist(c *gin.Context) {
+	db := c.MustGet("db").(*gorm.DB)
+
 	log.Println("Creating playlist...")
+
+	var body CreatePlaylistReq
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
 	req, err := http.NewRequest("GET", "https://www.1001tracklists.com/tracklist/1yvs6s7k/fred-again..-antro-juan-cdmx-mexico-2024-04-26.html", nil)
 	if err != nil {
@@ -89,7 +104,7 @@ func createPlaylist(c *gin.Context) {
 
 	// ...
 
-	tokenStr := c.Request.Header.Get("Authorization")
+	tokenStr := body.AccessToken
 	token := &oauth2.Token{AccessToken: tokenStr}
 
 	client2 := spotify.Authenticator{}.NewClient(token)
@@ -108,6 +123,13 @@ func createPlaylist(c *gin.Context) {
 		return
 	}
 
+	// Create a new Playlist record
+	playlistDB := db.Create(&models.Playlist{
+		SpotifyID: string(playlist.ID),
+		UserID:    user.ID,
+		Name:      playlist.Name,
+	})
+
 	// Search for the track URIs and add the tracks to the playlist
 	for _, track := range tracks {
 		results, err := client2.Search(track, spotify.SearchTypeTrack)
@@ -123,6 +145,14 @@ func createPlaylist(c *gin.Context) {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
+
+			// Create a new Track record
+			db.Create(&models.Track{
+				SpotifyID:  string(trackID),
+				PlaylistID: playlist.ID,
+				Name:       results.Tracks.Tracks[0].Name,
+				Link:       results.Tracks.Tracks[0].ExternalURLs["spotify"],
+			})
 		}
 	}
 

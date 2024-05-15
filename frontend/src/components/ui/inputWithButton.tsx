@@ -15,9 +15,11 @@ export function InputWithButton() {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-          // Authorization: "Bearer " + localStorage.getItem("spotifyToken"),
         },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({
+          url,
+          accessToken: localStorage.getItem("spotifyToken"),
+        }),
       });
 
       if (!response.ok) {

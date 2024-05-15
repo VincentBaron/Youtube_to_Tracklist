@@ -9,7 +9,6 @@ import (
 
 	"github.com/VincentBaron/youtube_to_tracklist/backend/gateway"
 	"github.com/VincentBaron/youtube_to_tracklist/backend/models"
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/yaml.v2"
 	"gorm.io/driver/postgres"
@@ -72,11 +71,6 @@ func main() {
 		c.Next()
 	}
 	r.Use(middleware)
-
-	// CORS middleware
-	ginConfig := cors.DefaultConfig()
-	ginConfig.AllowOrigins = []string{"http://localhost:5173"}
-	r.Use(cors.New(ginConfig))
 
 	// Set up the API endpoints
 	gateway.SetupRoutes(r)
