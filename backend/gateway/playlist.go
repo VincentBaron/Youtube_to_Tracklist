@@ -1,14 +1,13 @@
 package gateway
 
 import (
-	"context"
 	"log"
 	"net/http"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/zmb3/spotify"
-	"golang.org/x/oauth2/clientcredentials"
+	"golang.org/x/oauth2"
 
 	"github.com/gin-gonic/gin"
 )
@@ -43,19 +42,7 @@ type SpotifySearchResponse struct {
 }
 
 func createPlaylist(c *gin.Context) {
-	SpotifyClientID, ok := c.Get("SpotifyClientID")
-	if !ok {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "SpotifyClientID does not exist "})
-		return
-
-	}
-	SpotifyClientID = SpotifyClientID.(string)
-	SpotifyClientSecret, ok := c.Get("SpotifyClientSecret")
-	if !ok {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "SpotifyClientSecret does not exist "})
-		return
-	}
-	SpotifyClientSecret = SpotifyClientSecret.(string)
+	log.Println("Creating playlist...")
 
 	req, err := http.NewRequest("GET", "https://www.1001tracklists.com/tracklist/1yvs6s7k/fred-again..-antro-juan-cdmx-mexico-2024-04-26.html", nil)
 	if err != nil {
@@ -102,26 +89,20 @@ func createPlaylist(c *gin.Context) {
 
 	// ...
 
-	log.Println(SpotifyClientID.(string))
-	log.Println(SpotifyClientSecret.(string))
+	tokenStr := c.Request.Header.Get("Authorization")
+	token := &oauth2.Token{AccessToken: tokenStr}
 
-	config := &clientcredentials.Config{
-		ClientID:     SpotifyClientID.(string),
-		ClientSecret: SpotifyClientSecret.(string),
-		TokenURL:     spotify.TokenURL,
-	}
-	token, err := config.Token(context.Background())
+	client2 := spotify.Authenticator{}.NewClient(token)
+
+	// Get current user's profile
+	user, err := client2.CurrentUser()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	log.Println(token)
-
-	client2 := spotify.Authenticator{}.NewClient(token)
-
 	// Create a new playlist
-	playlist, err := client2.CreatePlaylistForUser(SpotifyClientID.(string), "New Playlist", "New playlist description", false)
+	playlist, err := client2.CreatePlaylistForUser(user.ID, "New Playlist", "New playlist description", false)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

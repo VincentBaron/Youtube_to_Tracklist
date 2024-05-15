@@ -11,4 +11,5 @@ func SetupRoutes(r *gin.Engine) {
 	r.GET("/spotify-login", spotifyLoginHandler)
 	r.GET("/home", homeHandler)
 	r.GET("/callback", callbackHandler)
+	// r.POST("/store-token", storeTokenHandler)
 }

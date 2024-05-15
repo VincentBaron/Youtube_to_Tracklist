@@ -14,6 +14,9 @@ type LoginForm struct {
 	Password string `json:"password" binding:"required"`
 }
 
+type tokenInfo struct {
+}
+
 type User struct {
 	gorm.Model
 	UserID              string
@@ -122,6 +125,27 @@ func callbackHandler(c *gin.Context) {
 // 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid password"})
 // 		return
 // 	}
+
+// 	c.JSON(http.StatusOK, gin.H{"status": "Success"})
+// }
+
+// func storeTokenHandler(c *gin.Context) {
+// 	db := c.MustGet("db").(*gorm.DB)
+
+// 	var form tokenInfo
+// 	if err := c.ShouldBindJSON(&form); err != nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+// 		return
+// 	}
+
+// 	var user User
+// 	if err := db.Where("user_id = ?", form.Username).First(&user).Error; err != nil {
+// 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+// 		return
+// 	}
+
+// 	user.SpotifyAccessToken = form.Password
+// 	db.Save(&user)
 
 // 	c.JSON(http.StatusOK, gin.H{"status": "Success"})
 // }
