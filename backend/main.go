@@ -1,19 +1,23 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/VincentBaron/youtube_to_tracklist/backend/gateway"
+	"github.com/VincentBaron/youtube_to_tracklist/backend/initializers"
+	"github.com/VincentBaron/youtube_to_tracklist/backend/middlewares"
 	"github.com/VincentBaron/youtube_to_tracklist/backend/models"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/yaml.v2"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
+
+func init() {
+	initializers.LoadEnvVariables()
+	initializers.ConnectToDb()
+	initializers.SyncDatabase()
+}
 
 func LoadConfig(file string) (models.Config, error) {
 	var config models.Config
@@ -26,54 +30,22 @@ func LoadConfig(file string) (models.Config, error) {
 }
 
 func main() {
-	configsFile, err := os.ReadFile("configs.yml")
-	if err != nil {
-		// handle error
-	}
-
-	// Unmarshal the configsFile data into a Config struct
-	var config models.Config
-	err = yaml.Unmarshal(configsFile, &config)
-	if err != nil {
-		// handle error
-	}
-
-	// Extract the necessary information from the Config struct
-	host := config.Database.Host
-	port := config.Database.Port
-	user := config.Database.User
-	password := config.Database.Password
-	database := config.Database.Name
-	youtubeAPIKey := config.YoutubeAPIKey
-
-	// Connect to postgres
-	dsn := fmt.Sprintf("host=%s port=%s, user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, database)
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		log.Fatalf("Error connecting to database: %s", err)
-	}
-	sqlDB, err := db.DB()
-	if err != nil {
-		log.Fatalf("Error getting the DB(): %s", err)
-	}
-	defer sqlDB.Close()
-
-	// db.AutoMigrate(models.Models())
-	// db.AutoMigrate(&models.Block{})
 
 	// Set up the Gin router
 	r := gin.Default()
-	middleware := func(c *gin.Context) {
-		c.Set("db", db)
-		c.Set("youtubeAPIKey", youtubeAPIKey)
-		c.Set("SpotifyClientID", config.SpotifyClientID)
-		c.Set("SpotifyClientSecret", config.SpotifyClientSecret)
-		c.Next()
-	}
-	r.Use(middleware)
 
 	// Set up the API endpoints
-	gateway.SetupRoutes(r)
+	// r.GET("/blocks", getBlocks)
+	r.POST("/playlist", middlewares.RequireAuth, gateway.CreatePlaylist)
+	r.GET("/validate", middlewares.RequireAuth, gateway.Validate)
+	// r.GET("/spotify-login", handler.spotifyLoginHandler)
+	// r.GET("/home", handler.homeHandler)
+	// r.GET("/callback", handler.handleCallback)
+	r.POST("/signup", gateway.Signup)
+	r.POST("/login", gateway.Login)
+	// r.GET("/status", handler.handleStatus)
+	// r.POST("/store-token", storeTokenHandler)
+	r.Run()
 
 	// Start the server
 	log.Printf("Server started at http://localhost:8080...")
