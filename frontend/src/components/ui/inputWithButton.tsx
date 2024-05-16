@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRef } from "react";
+import axios from "axios";
 
 export function InputWithButton() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -9,30 +10,18 @@ export function InputWithButton() {
     console.log(localStorage.getItem("spotifyToken"));
     const url = inputRef.current?.value;
 
-    try {
-      const response = await fetch("http://localhost:8080/playlist", {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          url,
-          accessToken: localStorage.getItem("spotifyToken"),
-        }),
+    axios
+      .post(
+        "http://localhost:8080/playlist",
+        { url },
+        { withCredentials: true }
+      )
+      .then((response) => {
+        console.log("response data: ", response.data);
+      })
+      .catch((error) => {
+        console.log("error response data:", error.response.data);
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log(data);
-    } catch (error) {
-      console.error(error);
-    }
-
-    // Handle the response data
   };
 
   return (

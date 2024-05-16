@@ -5,9 +5,9 @@ import "gorm.io/gorm"
 
 type User struct {
 	gorm.Model
-	Username            string `gorm:"unique"`
-	Email               string `gorm:"unique"`
-	Password            string
+	Username            string     `json:"username" gorm:"unique"`
+	Email               string     `json:"email" gorm:"unique"`
+	Password            string     `json:"password"`
 	SpotifyAccessToken  string     `json:"-"`
 	SpotifyRefreshToken string     `json:"-"`
 	Playlists           []Playlist `json:"-"`

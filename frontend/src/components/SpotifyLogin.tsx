@@ -1,13 +1,14 @@
-import { FC, useEffect, useState } from "react";
+import { FC, useState } from "react";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 
 const SpotifySignup: FC = () => {
-  // const [token, setToken] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleSignup = () => {
     axios
-      .post("http://localhost:8080/signup")
+      .post("http://localhost:8080/signup", { email, password })
       .then((response) => {
         window.location.href = response.data.url;
         console.log("response data: ", response.data);
@@ -19,7 +20,11 @@ const SpotifySignup: FC = () => {
 
   const handleLogin = () => {
     axios
-      .post("http://localhost:8080/login")
+      .post(
+        "http://localhost:8080/login",
+        { email, password }
+        // { withCredentials: true }
+      )
       .then((response) => {
         console.log("response data: ", response.data);
       })
@@ -28,24 +33,20 @@ const SpotifySignup: FC = () => {
       });
   };
 
-  // useEffect(() => {
-  //   fetch("/api/spotify/status", {
-  //     method: "GET",
-  //   })
-  //     .then((response) => response.json())
-  //     .then((data) => {
-  //       if (data.loggedIn) {
-  //         setToken("loggedIn");
-  //       }
-  //     });
-  // }, []);
-
-  // if (token) {
-  //   return <div>You are logged in</div>;
-  // }
-
   return (
     <div>
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Email"
+      />
+      <input
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="Password"
+      />
       <Button onClick={handleSignup}>Signup with Spotify</Button>
       <Button onClick={handleLogin}>Login with Spotify</Button>
     </div>
