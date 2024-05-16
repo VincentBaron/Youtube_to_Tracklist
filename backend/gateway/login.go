@@ -1,8 +1,14 @@
 package gateway
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"log"
 	"net/http"
+	"net/url"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/VincentBaron/youtube_to_tracklist/backend/initializers"
@@ -14,12 +20,9 @@ import (
 
 func Signup(c *gin.Context) {
 	// Get the email/pass off req Body
-	var body struct {
-		Email    string
-		Password string
-	}
+	var payload models.User
 
-	if c.Bind(&body) != nil {
+	if c.Bind(&payload) != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Failed to read body",
 		})
@@ -28,7 +31,7 @@ func Signup(c *gin.Context) {
 	}
 
 	// Hash the password
-	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
+	hash, err := bcrypt.GenerateFromPassword([]byte(payload.Password), 10)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -38,7 +41,11 @@ func Signup(c *gin.Context) {
 	}
 
 	// Create the user
-	user := models.User{Email: body.Email, Password: string(hash)}
+	user := models.User{
+		Email:    payload.Email,
+		Username: payload.Username,
+		Password: string(hash),
+	}
 
 	result := initializers.DB.Create(&user)
 
@@ -48,8 +55,91 @@ func Signup(c *gin.Context) {
 		})
 	}
 
-	// Respond
-	c.JSON(http.StatusOK, gin.H{})
+	state := strconv.FormatUint(uint64(user.ID), 10) // Convert the user's ID to a string
+	// Redirect the user to the Spotify authorization page
+	url := "https://accounts.spotify.com/authorize?response_type=code" +
+		"&client_id=" + initializers.Conf.SpotifyClientID +
+		"&scope=" + "playlist-modify-private" +
+		"&redirect_uri=" + initializers.Conf.SpotifyRedirectURL +
+		"&state=" + state
+
+	log.Println(url)
+
+	// // Respond
+	c.JSON(http.StatusOK, gin.H{"url": url})
+}
+
+func CallbackHandler(c *gin.Context) {
+	// Get the code from the query parameters
+	code := c.Query("code")
+
+	// Prepare the data for the POST request
+	data := url.Values{}
+	data.Set("grant_type", "authorization_code")
+	data.Set("code", code)
+	data.Set("redirect_uri", initializers.Conf.SpotifyRedirectURL)
+	data.Set("client_id", initializers.Conf.SpotifyClientID)
+	data.Set("client_secret", initializers.Conf.SpotifyClientSecret)
+
+	// Create a new request
+	req, err := http.NewRequest("POST", "https://accounts.spotify.com/api/token", strings.NewReader(data.Encode()))
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create request"})
+		return
+	}
+
+	// Set the content type to application/x-www-form-urlencoded
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	// Send the request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send request"})
+		return
+	}
+	defer resp.Body.Close()
+
+	// Read the response body
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read response body"})
+		return
+	}
+
+	// Parse the response body
+	var tokenResponse models.TokenResponse
+	err = json.Unmarshal(body, &tokenResponse)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse response body"})
+		return
+	}
+
+	// Get the state parameter from the query parameters
+	state := c.Query("state")
+
+	// Convert the state parameter to a uint
+	userID, err := strconv.ParseUint(state, 10, 64)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse state parameter"})
+		return
+	}
+
+	// Update the user record with the access token and refresh token
+	user := models.User{}
+	initializers.DB.First(&user, userID)
+	user.SpotifyAccessToken = tokenResponse.AccessToken
+	user.SpotifyRefreshToken = tokenResponse.RefreshToken
+	initializers.DB.Save(&user)
+
+	// Log the response body
+	log.Println(string(body))
+	c.Redirect(http.StatusTemporaryRedirect, "http://localhost:5173")
 }
 
 func Login(c *gin.Context) {

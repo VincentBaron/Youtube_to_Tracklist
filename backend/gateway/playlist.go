@@ -6,10 +6,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/VincentBaron/youtube_to_tracklist/backend/models"
 	"github.com/zmb3/spotify"
-	"golang.org/x/oauth2"
-	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
 )
@@ -48,10 +45,15 @@ type SpotifySearchResponse struct {
 	} `json:"tracks"`
 }
 
-func createPlaylist(c *gin.Context) {
-	db := c.MustGet("db").(*gorm.DB)
+func CreatePlaylist(c *gin.Context) {
 
 	log.Println("Creating playlist...")
+	tmpClient, exists := c.Get("client")
+	spotifyClient := tmpClient.(spotify.Client)
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not retrieve Spotify client"})
+		return
+	}
 
 	var body CreatePlaylistReq
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -104,35 +106,28 @@ func createPlaylist(c *gin.Context) {
 
 	// ...
 
-	tokenStr := body.AccessToken
-	token := &oauth2.Token{AccessToken: tokenStr}
-
-	client2 := spotify.Authenticator{}.NewClient(token)
-
-	// Get current user's profile
-	user, err := client2.CurrentUser()
+	user, err := spotifyClient.CurrentUser()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
 	// Create a new playlist
-	playlist, err := client2.CreatePlaylistForUser(user.ID, "New Playlist", "New playlist description", false)
+	playlist, err := spotifyClient.CreatePlaylistForUser(user.ID, "New Playlist", "New playlist description", false)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Create a new Playlist record
-	playlistDB := db.Create(&models.Playlist{
-		SpotifyID: string(playlist.ID),
-		UserID:    user.ID,
-		Name:      playlist.Name,
-	})
+	// // Create a new Playlist record
+	// playlistDB := db.Create(&models.Playlist{
+	// 	SpotifyID: string(playlist.ID),
+	// 	UserID:    user.ID,
+	// 	Name:      playlist.Name,
+	// })
 
 	// Search for the track URIs and add the tracks to the playlist
 	for _, track := range tracks {
-		results, err := client2.Search(track, spotify.SearchTypeTrack)
+		results, err := spotifyClient.Search(track, spotify.SearchTypeTrack)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -140,19 +135,19 @@ func createPlaylist(c *gin.Context) {
 
 		if len(results.Tracks.Tracks) > 0 {
 			trackID := results.Tracks.Tracks[0].ID
-			_, err = client2.AddTracksToPlaylist(playlist.ID, trackID)
+			_, err = spotifyClient.AddTracksToPlaylist(playlist.ID, trackID)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
 
-			// Create a new Track record
-			db.Create(&models.Track{
-				SpotifyID:  string(trackID),
-				PlaylistID: playlist.ID,
-				Name:       results.Tracks.Tracks[0].Name,
-				Link:       results.Tracks.Tracks[0].ExternalURLs["spotify"],
-			})
+			// // Create a new Track record
+			// db.Create(&models.Track{
+			// 	SpotifyID:  string(trackID),
+			// 	PlaylistID: playlist.ID,
+			// 	Name:       results.Tracks.Tracks[0].Name,
+			// 	Link:       results.Tracks.Tracks[0].ExternalURLs["spotify"],
+			// })
 		}
 	}
 

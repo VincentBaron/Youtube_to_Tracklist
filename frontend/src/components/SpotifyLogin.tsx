@@ -1,35 +1,55 @@
 import { FC, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import axios from "axios";
 
-const SpotifyLogin: FC = () => {
-  const [token, setToken] = useState(localStorage.getItem("spotifyToken"));
+const SpotifySignup: FC = () => {
+  // const [token, setToken] = useState<string | null>(null);
 
-  const handleLogin = () => {
-    const SPOTIFY_AUTHORIZE_ENDPOINT = import.meta.env
-      .VITE_SPOTIFY_AUTHORIZE_ENDPOINT;
-    const CLIENT_ID = import.meta.env.VITE_CLIENT_ID;
-    const REDIRECT_URL_AFTER_LOGIN = import.meta.env
-      .VITE_REDIRECT_URL_AFTER_LOGIN;
-    const SCOPES_URL_PARAM = import.meta.env.VITE_SCOPES_URL_PARAM;
-
-    window.location.href = `${SPOTIFY_AUTHORIZE_ENDPOINT}?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URL_AFTER_LOGIN}&scope=${SCOPES_URL_PARAM}&response_type=token&show_dialog=true`;
+  const handleSignup = () => {
+    axios
+      .post("http://localhost:8080/signup")
+      .then((response) => {
+        window.location.href = response.data.url;
+        console.log("response data: ", response.data);
+      })
+      .catch((error) => {
+        console.log("error response data:", error.response.data);
+      });
   };
 
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.hash.substring(1));
-    const accessToken = urlParams.get("access_token");
+  const handleLogin = () => {
+    axios
+      .post("http://localhost:8080/login")
+      .then((response) => {
+        console.log("response data: ", response.data);
+      })
+      .catch((error) => {
+        console.log("error response data:", error.response.data);
+      });
+  };
 
-    if (accessToken) {
-      localStorage.setItem("spotifyToken", accessToken);
-      setToken(accessToken);
-    }
-  }, []);
+  // useEffect(() => {
+  //   fetch("/api/spotify/status", {
+  //     method: "GET",
+  //   })
+  //     .then((response) => response.json())
+  //     .then((data) => {
+  //       if (data.loggedIn) {
+  //         setToken("loggedIn");
+  //       }
+  //     });
+  // }, []);
 
-  if (token) {
-    return <div>You are logged in</div>;
-  }
+  // if (token) {
+  //   return <div>You are logged in</div>;
+  // }
 
-  return <Button onClick={handleLogin}>Login with Spotify</Button>;
+  return (
+    <div>
+      <Button onClick={handleSignup}>Signup with Spotify</Button>
+      <Button onClick={handleLogin}>Login with Spotify</Button>
+    </div>
+  );
 };
 
-export default SpotifyLogin;
+export default SpotifySignup;

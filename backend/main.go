@@ -9,6 +9,7 @@ import (
 	"github.com/VincentBaron/youtube_to_tracklist/backend/initializers"
 	"github.com/VincentBaron/youtube_to_tracklist/backend/middlewares"
 	"github.com/VincentBaron/youtube_to_tracklist/backend/models"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/yaml.v2"
 )
@@ -32,7 +33,10 @@ func LoadConfig(file string) (models.Config, error) {
 func main() {
 
 	// Set up the Gin router
-	r := gin.Default()
+	r := gin.New()
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true
+	r.Use(cors.New(config))
 
 	// Set up the API endpoints
 	// r.GET("/blocks", getBlocks)
@@ -43,9 +47,10 @@ func main() {
 	// r.GET("/callback", handler.handleCallback)
 	r.POST("/signup", gateway.Signup)
 	r.POST("/login", gateway.Login)
+	r.GET("/callback", gateway.CallbackHandler)
 	// r.GET("/status", handler.handleStatus)
 	// r.POST("/store-token", storeTokenHandler)
-	r.Run()
+	r.Run(":8080")
 
 	// Start the server
 	log.Printf("Server started at http://localhost:8080...")

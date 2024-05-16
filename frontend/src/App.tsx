@@ -1,11 +1,11 @@
 import { FC } from "react";
 import Homepage from "./pages/HomePage";
-import SpotifyLogin from "./components/SpotifyLogin"; // import the SpotifyLogin component
+import SpotifySignup from "./components/SpotifyLogin"; // import the SpotifyLogin component
 
 const App: FC = () => {
   return (
     <div>
-      <SpotifyLogin /> {/* add the SpotifyLogin component */}
+      <SpotifySignup /> {/* add the SpotifyLogin component */}
       <Homepage />
     </div>
   );

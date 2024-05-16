@@ -7,7 +7,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-var conf models.Config
+var Conf models.Config
 
 func LoadEnvVariables() {
 	configsFile, err := os.ReadFile("configs.yml")
@@ -16,7 +16,7 @@ func LoadEnvVariables() {
 	}
 
 	// Unmarshal the configsFile data into a Config struct
-	err = yaml.Unmarshal(configsFile, &conf)
+	err = yaml.Unmarshal(configsFile, &Conf)
 	if err != nil {
 		// handle error
 	}

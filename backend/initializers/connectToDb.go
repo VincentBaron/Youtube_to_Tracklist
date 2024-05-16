@@ -12,11 +12,11 @@ var DB *gorm.DB
 
 func ConnectToDb() {
 	var err error
-	host := conf.Database.Host
-	port := conf.Database.Port
-	user := conf.Database.User
-	password := conf.Database.Password
-	database := conf.Database.Name
+	host := Conf.Database.Host
+	port := Conf.Database.Port
+	user := Conf.Database.User
+	password := Conf.Database.Password
+	database := Conf.Database.Name
 
 	// Connect to postgres
 	dsn := fmt.Sprintf("host=%s port=%s, user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, database)
