@@ -1,27 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRef } from "react";
-import axios from "axios";
+import { useCreatePlaylistMutation } from "@/utils/queryOptions";
 
-export function InputWithButton() {
+function URLInputField() {
   const inputRef = useRef<HTMLInputElement>(null);
+  const createPlaylistMutation = useCreatePlaylistMutation();
 
-  const handleSubmit = async () => {
-    console.log(localStorage.getItem("spotifyToken"));
+  const handleSubmit = () => {
     const url = inputRef.current?.value;
-
-    axios
-      .post(
-        "http://localhost:8080/playlist",
-        { url },
-        { withCredentials: true }
-      )
-      .then((response) => {
-        console.log("response data: ", response.data);
-      })
-      .catch((error) => {
-        console.log("error response data:", error.response.data);
-      });
+    if (url) {
+      createPlaylistMutation.mutate(url);
+    }
   };
 
   return (
@@ -29,7 +19,7 @@ export function InputWithButton() {
       <Input
         ref={inputRef}
         className="flex-grow"
-        type="email"
+        type="text"
         placeholder="Youtube URL"
       />
       <Button type="button" onClick={handleSubmit}>
@@ -38,3 +28,5 @@ export function InputWithButton() {
     </div>
   );
 }
+
+export default URLInputField;

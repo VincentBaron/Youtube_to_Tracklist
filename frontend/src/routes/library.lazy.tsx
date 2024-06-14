@@ -1,8 +1,9 @@
-import { URLInputField } from "@/components/ui/inputWithButton";
+import { createLazyFileRoute } from "@tanstack/react-router";
+import URLInputField from "@/components/URLInputField";
 import { FC } from "react";
 import { Card } from "@/components/ui/card";
 
-const Homepage: FC = () => {
+const Library: FC = () => {
   return (
     <div className="flex flex-col items-center pt-10 h-screen">
       <div className="pt-10 mb-4">
@@ -33,4 +34,8 @@ const Homepage: FC = () => {
   );
 };
 
-export default Homepage;
+export const Route = createLazyFileRoute("/library")({
+  component: Library,
+});
+
+export default Library;
