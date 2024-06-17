@@ -16,11 +16,11 @@ export function SetsPlayerPage() {
         align: "start",
       }}
       orientation="vertical"
-      className=""
+      className="h-screen"
     >
-      <CarouselContent className="-mt-1 h-[80vh]">
+      <CarouselContent className="-mt-1">
         {Array.from({ length: 20 }).map((_, index) => (
-          <CarouselItem key={index} className="pt-1 md:basis-1/6">
+          <CarouselItem key={index} className="">
             <div className="p-1">
               <Card>
                 <CardContent className="flex items-center justify-center p-6">
@@ -31,8 +31,8 @@ export function SetsPlayerPage() {
           </CarouselItem>
         ))}
       </CarouselContent>
-      <CarouselPrevious />
-      <CarouselNext />
+      <CarouselPrevious className="h-screen" />
+      <CarouselNext className="h-[10vh]" />
     </Carousel>
   );
 }
