@@ -11,6 +11,13 @@ type User struct {
 	SpotifyAccessToken  string     `json:"-"`
 	SpotifyRefreshToken string     `json:"-"`
 	Playlists           []Playlist `json:"-"`
+	Sets                []Set      `gorm:"foreignKey:UserID"`
+}
+
+type Set struct {
+	gorm.Model
+	Songs  []string `json:"songs"`
+	UserID uint     `gorm:"not null"`
 }
 
 type Playlist struct {

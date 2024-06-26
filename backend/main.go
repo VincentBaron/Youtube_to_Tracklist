@@ -48,6 +48,7 @@ func main() {
 	r.POST("/signup", gateway.Signup)
 	r.POST("/login", gateway.Login)
 	r.GET("/callback", gateway.CallbackHandler)
+	r.GET("/sets", gateway.GetSets)
 	// r.GET("/status", handler.handleStatus)
 	// r.POST("/store-token", storeTokenHandler)
 	r.Run(":8080")
