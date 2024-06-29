@@ -16,7 +16,7 @@ export default function SetsPage() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:8080/sets")
+      .get("http://localhost:8080/sets", { withCredentials: true })
       .then((response: AxiosResponse<any>) => {
         setSets(response.data);
       });

@@ -5,19 +5,18 @@ import "gorm.io/gorm"
 
 type User struct {
 	gorm.Model
-	Username            string     `json:"username" gorm:"unique"`
-	Email               string     `json:"email" gorm:"unique"`
-	Password            string     `json:"password"`
-	SpotifyAccessToken  string     `json:"-"`
-	SpotifyRefreshToken string     `json:"-"`
-	Playlists           []Playlist `json:"-"`
-	Sets                []Set      `gorm:"foreignKey:UserID"`
+	Username            string `json:"username" gorm:"unique"`
+	Email               string `json:"email" gorm:"unique"`
+	Password            string `json:"password"`
+	SpotifyAccessToken  string `json:"-"`
+	SpotifyRefreshToken string `json:"-"`
+	Sets                []Set  `gorm:"foreignKey:UserID"`
 }
 
 type Set struct {
 	gorm.Model
-	Songs  []string `json:"songs"`
-	UserID uint     `gorm:"not null"`
+	Link   string `json:"link"`
+	UserID uint   `gorm:"not null"`
 }
 
 type Playlist struct {

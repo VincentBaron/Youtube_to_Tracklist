@@ -18,9 +18,9 @@ import (
 func RequireAuth(c *gin.Context) {
 	// Get the cookie off the request
 	tokenString, err := c.Cookie("Authorization")
-
 	if err != nil {
 		c.AbortWithStatus(http.StatusUnauthorized)
+		return
 	}
 
 	// Decode/validate it
