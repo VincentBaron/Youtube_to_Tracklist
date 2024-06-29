@@ -12,13 +12,14 @@ import {
 } from "@/components/ui/carousel";
 
 export default function SetsPage() {
-  const [sets, setSets] = useState<{ name: string }[]>([]);
+  const [sets, setSets] = useState<{ link: string }[]>([]);
 
   useEffect(() => {
     axios
       .get("http://localhost:8080/sets", { withCredentials: true })
       .then((response: AxiosResponse<any>) => {
-        setSets(response.data);
+        console.log(response.data);
+        setSets(response.data.sets);
       });
   }, []);
 
@@ -28,9 +29,9 @@ export default function SetsPage() {
         <CarouselContent>
           {sets.map((set, index) => (
             <CarouselItem key={index}>
-              <Card>
+              <Card className="h-10 w-10">
                 <CardContent className="flex aspect-square items-center justify-center">
-                  <span className="text-4xl font-semibold">{set.name}</span>
+                  <span className="text-4xl font-semi bold">{set.link}</span>
                 </CardContent>
               </Card>
             </CarouselItem>
