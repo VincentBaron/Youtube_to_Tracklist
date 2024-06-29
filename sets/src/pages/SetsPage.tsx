@@ -25,11 +25,11 @@ export default function SetsPage() {
 
   return (
     <div>
-      <Carousel opts={{}}>
+      <Carousel className="h-[20vh] w-[20vw]">
         <CarouselContent>
           {sets.map((set, index) => (
             <CarouselItem key={index}>
-              <Card className="h-10 w-10">
+              <Card>
                 <CardContent className="flex aspect-square items-center justify-center">
                   <span className="text-4xl font-semi bold">{set.link}</span>
                 </CardContent>
